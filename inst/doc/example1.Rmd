@@ -1,0 +1,58 @@
+---
+title: "Example 1: Using SEAGLE with .txt Input Files"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{example1}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This tutorial demonstrates how to use the `SEAGLE` package when the user inputs ${\bf y}$, ${\bf X}$, ${\bf E}$, and ${\bf G}$ from .txt files.  We'll begin by loading the `SEAGLE` package.
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(SEAGLE)
+```
+
+If you have your own files ready to read in for ${\bf y}$, ${\bf X}$, ${\bf E}$, and ${\bf G}$, you can read them into R using the `read.csv()` command.
+
+As an example, we've included `y.txt`, `X.txt`, `E.txt`, and `G.txt` files in the `extdata` folder of this package.  The following code loads those files into R so we can use them in this tutorial.
+
+```{r}
+y_loc <- system.file("extdata", "y.txt", package = "SEAGLE")
+y <- as.numeric(unlist(read.csv(y_loc)))
+
+X_loc <- system.file("extdata", "X.txt", package = "SEAGLE")
+X <- as.matrix(read.csv(X_loc))
+
+E_loc <- system.file("extdata", "E.txt", package = "SEAGLE")
+E <- as.numeric(unlist(read.csv(E_loc)))
+
+G_loc <- system.file("extdata", "G.txt", package = "SEAGLE")
+G <- as.matrix(read.csv(G_loc))
+```
+
+Now we can input ${\bf y}$, ${\bf X}$, ${\bf E}$, and ${\bf G}$ into the `prep.SEAGLE` function.  The `intercept = 1` parameter indicates that the first column of ${\bf X}$ is the all ones vector for the intercept.
+
+This preparation procedure formats the input data for the `SEAGLE` function by checking the dimensions of the input data.  It also pre-computes a QR decomposition for $\widetilde{\bf X} = \begin{pmatrix} {\bf 1}_{n} & {\bf X} & {\bf E} \end{pmatrix}$, where ${\bf 1}_{n}$ denotes the all ones vector of length $n$.
+
+```{r}
+objSEAGLE <- prep.SEAGLE(y=as.matrix(y), X=X, intercept=1, E=E, G=G)
+```
+
+Finally, we'll input the prepared data into the `SEAGLE` function to compute the score-like test statistic $T$ and its corresponding p-value.  The `init.tau` and `init.sigma` parameters are the initial values for $\tau$ and $\sigma$ employed in the REML EM algorithm.
+
+```{r}
+res <- SEAGLE(objSEAGLE, init.tau=0.5, init.sigma=0.5)
+res$T
+res$pv
+```
+
+The score-like test statistic $T$ for the G$\times$E effect and its corresponding p-value can be found in `res$T` and `res$pv`, respectively.
+

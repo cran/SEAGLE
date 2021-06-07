@@ -1,0 +1,199 @@
+---
+title: "Example 4: Using SEAGLE for Chromosome-Wide Gene-Based Analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{example4}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This tutorial demonstrates how to use the `SEAGLE` package for chromosome-wide gene-based studies when the genotype data are from GWAS studies (.bed + .bim + .fam).  We recommend using PLINK1.9 available from [https://www.cog-genomics.org/plink/1.9/](https://www.cog-genomics.org/plink/1.9/) to generate a .raw file for each of the SNP sets.  For more information on .raw files, please refer to [https://www.cog-genomics.org/plink/2.0/formats#raw](https://www.cog-genomics.org/plink/2.0/formats#raw).  The .raw file records the allelic dosage for each SNP.
+
+Examples files containing GWAS data (.bed, .bim, and .fam files) for all the genes in chromosome 22 and a corresponding gene list in `glist-hg19` can be downloaded via the `SEAGLE-example4-data.zip` file from [http://jocelynchi.com/SEAGLE/SEAGLE-example4-data.zip](http://jocelynchi.com/SEAGLE/SEAGLE-example4-data.zip).
+
+To follow along with the PLINK conversion procedures, you will first need to install PLINK1.9 from [https://www.cog-genomics.org/plink/1.9/](https://www.cog-genomics.org/plink/1.9/) and unzip the example `SEAGLE-example4-data.zip` file.  Afterwards, you can type the PLINK commands below in a command prompt or terminal window in the folder where these files are located. This will produce a .raw file for each gene that you can read into R to obtain a relevant genetic marker matrix ${\bf G}$ that you can input into `SEAGLE`.
+
+After unzipping the `SEAGLE-example4-data.zip` file, you will find two empty directories named `plink_bash` and `R_codes`.  The `plink_bash` directory is where we will write the PLINK1.9 commands that you will run to create the .raw files for each gene.  The `R_codes` directory is where we will write the R scripts for loading the resulting .raw files into R.
+
+## Writing .raw files for each gene in chromosome 22 with PLINK1.9
+
+We will begin by telling R the location where you unzipped the `SEAGLE-example4-data.zip` file.  Then we will read in the gene list in `glist-hg19` and subset for the genes in chromosome 22.  If you unzipped the file to your Downloads directory on a Mac, your path might look like the following.
+
+```
+dir <- "/Users/user_name/Downloads/SEAGLE-example4-data/"
+glist <- read.table(paste0(dir,"glist-hg19"), header = F)
+glist_chr22 <- subset(glist, glist$V1 == 22)
+```
+
+Next, we will remove any duplicated genes for chromosome 22 in our gene list.
+
+```
+dup <- glist_chr22$V4[duplicated(glist_chr22$V4)] # find duplciated gene
+dup
+```
+
+Notice that in this example, there are 4 duplicated genes given by the following.
+
+```
+# GSTT2: chr22:24,322,339-24,326,106(GRCh37/hg19 by Ensembl)
+# GSTT2B: chr22:24,299,601-24,303,373(GRCh37/hg19 by Ensembl)
+# RIMBP3B: chr22:21,738,040-21,743,458(GRCh37/hg19 by Entrez Gene)
+# RIMBP3C: chr22:21,899,646-21,905,750(GRCh37/hg19 by Ensembl)
+```
+
+We will update our gene list by manually updating the positions of the duplicated genes.
+
+```
+glist_chr22 <- glist_chr22[!duplicated(glist_chr22$V4),]
+glist_chr22[which(glist_chr22$V4 == "GSTT2"),2:3] <- c(24322339, 24326106)
+glist_chr22[which(glist_chr22$V4 == "GSTT2B"),2:3] <- c(24299601,24303373)
+glist_chr22[which(glist_chr22$V4 == "RIMBP3B"),2:3] <- c(21738040,21743458)
+glist_chr22[which(glist_chr22$V4 == "RIMBP3C"),2:3] <- c(21899646,21905750)
+write.table(glist_chr22, "glist-hg19_chr22_updated", col.names = F, row.names = F, quote = F)
+
+# replace hyphen with underscore
+glist_chr22$V4 <- sub("-", "_", glist_chr22$V4)
+```
+
+Now we will use PLINK1.9 to create a .raw file for each gene in chromosome 22, which includes all SNPs for a given gene.  The following code will produce a sequence of bash files to produce .raw files for each gene in `glist_chr22`.  It will also produce a corresponding sequence of R code snippets for reaching each .raw file into R.  Each bash file will run PLINK1.9 for `num_genes=50` genes at a time.
+
+```
+# of plink commands per job
+num_genes <- 50
+
+bash_plink <- NULL # bash command
+command <- c("#! /bin/bash", "#SBATCH --job-name=plink") # plink command
+codeR <- NULL # R code
+for (i in 1:nrow(glist_chr22)) {
+  command <- c(command, paste0("plink --bfile 1kg_phase1_chr22 --make-set
+  glist-hg19_chr22_updated --gene ", glist_chr22$V4[i]," --out ",
+  glist_chr22$V4[i]," --export A") )
+
+  # write R codes for reading .raw files, one R file for one gene
+  codeR <- paste0(glist_chr22$V4[i], " <- read.delim(\"", glist_chr22$V4[i],".raw\", sep=\" \")")
+  fileConn<-file(paste0(dir,"R_codes/", glist_chr22$V4[i],".R"))
+  writeLines(codeR, fileConn)
+  close(fileConn)
+
+  if(i %% num_genes == 0 | i==nrow(glist_chr22)){
+    # write plink commands in bash file
+    fileConn<-file(paste0(dir,"plink_bash/plink_job",i-num_genes+1,"-",i,".sh"))
+    writeLines(command, fileConn)
+    close(fileConn)
+
+    command <- c("#! /bin/bash", "#SBATCH --job-name=plink")
+    bash_plink <- c(bash_plink, paste0("sbatch plink_job",i-num_genes+1,"-",i,".sh"))
+  }
+}
+
+# Write bash commands to a text file
+fileConn<-file(paste0("bash_plink.txt"))
+writeLines(bash_plink, fileConn)
+close(fileConn)
+```
+
+Note that if you want to run the .sh files in the `plink_bash` directory on your local computer, you can employ the `bash` command instead of `SBATCH` in terminal or command prompt.  Additionally, if you are using Linux, you may need to specify `plink1.9` rather than just `plink`.
+
+Running the above code will setup the code and files to produce a single .raw file for each gene when running the commands in the `bash_plink.txt` file.  The .raw file for each gene will contain all the SNPs for that gene.
+
+## Loading .raw files into R and extracting the genetic marker matrix ${\bf G}$
+
+Now that we have data for each gene in the .raw format, we can load the .raw files sequentially into R  for input into `SEAGLE` as follows.  We'll first load the `SEAGLE` package.
+
+```{r setup}
+library(SEAGLE)
+```
+
+The following code shows how to test for the GxE interaction effect using `SEAGLE` on these genes.  To illustrate how to use SEAGLE, we will generate synthetic phenotype and covariate data for $n=1092$ study participants.
+
+As an example, we've included .raw files for the following subset of genes from chromosome 22 in the `extdata` folder of this package: ACR, APOBEC3A, APOBEC3C, ARSA, ATF4, ATP5L2, BCRP2, BMS1P17, and BMS1P18.  We've also included a corresponding gene list in `glist-hg19_chr22_example`.  In practice, you will want to specify your own `dir` for the directory where you've stored your .raw files.
+
+```{r}
+# Read in gene list
+dir <- "../inst/extdata/"
+genelist <- read.delim(paste0(dir, "glist-hg19_chr22_example"), sep=" ", header=FALSE)
+
+# Identify number of genes in genelist
+num_genes <- dim(genelist)[1]
+
+# Generate synthetic phenotype and covariate data
+n <- 1092 # number of study participants
+
+set.seed(1)
+y <- 2 * rnorm(n)
+
+set.seed(2)
+X <- as.matrix(rnorm(n))
+
+set.seed(3)
+E <- as.matrix(rnorm(n))
+```
+
+Now that we have ${\bf y}$, ${\bf X}$, ${\bf E}$, and ${\bf G}$, we can run `SEAGLE` on each gene in `genelist`.  We will first perform data checking procedures on ${\bf G}$.  Then we will input ${\bf y}$, ${\bf X}$, ${\bf E}$, and ${\bf G}$ for each gene into the `prep.SEAGLE` function.  The `intercept = 0` parameter indicates that the first column of ${\bf X}$ is not the all ones vector for the intercept.
+
+The preparation procedure formats the input data for the `SEAGLE` function by checking the dimensions of the input data.  It also pre-computes a QR decomposition for $\widetilde{\bf X} = \begin{pmatrix} {\bf 1}_{n} & {\bf X} & {\bf E} \end{pmatrix}$, where ${\bf 1}_{n}$ denotes the all ones vector of length $n$.
+
+Afterwards, we will input the prepared data for each gene into the `SEAGLE` function to compute the score-like test statistic $T$ and its corresponding p-value.  The `init.tau` and `init.sigma` parameters are the initial values for estimating $\tau$ and $\sigma$ in the REML EM algorithm.
+
+```{r}
+# Initialize output containers for T and p-value for each gene
+T.list <- numeric(length=num_genes)
+pv.list <- numeric(length=num_genes)
+
+# Run SEAGLE on each gene in genelist
+for (i in 1:num_genes) {
+  
+  # Identify current gene
+  gene_name <- genelist[i,4]
+  
+  # Obtain G
+  Gtemp <- read.delim(paste0(dir, gene_name, ".raw"), sep=" ")
+  G <- as.matrix(Gtemp[,-c(1:6)])
+  L <- dim(G)[2]                ## number of SNPs
+  
+  # Make weights
+  avg_newsnp <- colMeans(G)
+  fA  = avg_newsnp/2            ## freq of allele "A"
+  fa  = 1-fA                    ## freq of allele "a"
+  maf = fA; maf[fA>0.5]= fa[fA>0.5]## maf should be b/w 0 and 0.5
+  G = G[ ,maf>0]                ## only keep those SNPs with MAF>0
+  maf <- maf[maf > 0]           ## Keep only MAF > 0)
+  wt   = sqrt(maf^(-3/4))       ## Note we take the square root here
+  if (length(wt) > 1) {
+    G_final    = G %*% diag(wt) ## Input this G
+  } else {
+    T.list[i] <- NA
+    pv.list[i] <- NA
+    next
+  }
+
+  # Run SEAGLE
+  objSEAGLE <- prep.SEAGLE(y=y, X=X, intercept=0, 
+                           E=E, G=G_final)
+  res <- SEAGLE(objSEAGLE, init.tau=0.5, init.sigma=0.5)
+  
+  # Save T and p-value into output lists
+  T.list[i] <- res$T
+  pv.list[i] <- res$pv
+}
+```
+
+The score-like test statistics $T$ for the G$\times$E effect and their corresponding p-values can be found in `T.list` and `pv.list`, respectively.  We can take a look at the test statistics and p-values computed for each of the genes in `genelist`.
+
+```{r}
+resMat <- cbind(T.list, pv.list)
+colnames(resMat) <- c("T", "p-value")
+resMat
+```
+
+## Acknowledgments
+
+Many thanks to Yueyang Huang for generating the example data, PLINK1.9 code and bash files, and R scripts for reading in the .raw files for this tutorial.
+
