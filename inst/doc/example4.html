@@ -152,7 +152,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 glist &lt;- read.table(paste0(dir,&quot;glist-hg19&quot;), header = F)
 glist_chr22 &lt;- subset(glist, glist$V1 == 22)</code></pre>
 <p>Next, we will remove any duplicated genes for chromosome 22 in our gene list.</p>
-<pre><code>dup &lt;- glist_chr22$V4[duplicated(glist_chr22$V4)] # find duplciated gene
+<pre><code>dup &lt;- glist_chr22$V4[duplicated(glist_chr22$V4)] # find duplicated gene
 dup</code></pre>
 <p>Notice that in this example, there are 4 duplicated genes given by the following.</p>
 <pre><code># GSTT2: chr22:24,322,339-24,326,106(GRCh37/hg19 by Ensembl)

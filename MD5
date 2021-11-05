@@ -1,14 +1,14 @@
-b4eee7414d5ad7032bcf71b9a621699a *DESCRIPTION
+936728484d3ee5da465abc45e4786c63 *DESCRIPTION
 0f8a57d74f577075abb2250ed04de7be *NAMESPACE
 57e89c8ad03c5566698026844c111720 *R/data.R
 2f5ede608d423ac664ec798fc48905bc *R/em_reml.R
 16889f12689d26e14332e15842343160 *R/makeData.R
 66f87b9fa4bf85b534a2ec5551b1199c *R/prepData.R
 ee57c058f8313b66301b3a27ca9fba82 *R/score.R
-425481a51a257088bd5657ff91e845bf *README.md
-65969d4eba6956e724f1e17ca01331ac *build/vignette.rds
-c12dd684e59a000b76882f6c6c22d8e5 *data/cosihap.RData
-441a5e9282c4a73a1454713dc16367e1 *inst/CITATION
+c2fc44bac99411754b86ad1b27b48d86 *README.md
+3b8dcde3e0ba9a20822c9c350bcef80a *build/vignette.rds
+5bf5e8cd07525ab31fa93b1de4f7ca3b *data/cosihap.RData
+0bc65aa040474e50634b300e338d4516 *inst/CITATION
 0ac5fc3d779532024672a1102b803fe0 *inst/doc/example1.R
 bab26dd889041cc285193ad2ee3f1f79 *inst/doc/example1.Rmd
 86a8fe712580c8e0f0fc61e0929ca2f7 *inst/doc/example1.html
@@ -19,8 +19,8 @@ ab5fc535dcf08210f1c616b47595b038 *inst/doc/example3.R
 aa3806eaa5ea4256a16e3c1a678d0850 *inst/doc/example3.Rmd
 5db78865c26a03d72e04bf5c8513f58f *inst/doc/example3.html
 88d82e63fcb2c563f6fb3e833f99caa1 *inst/doc/example4.R
-c85129871eac9d77b7abf0ae4ce14423 *inst/doc/example4.Rmd
-702d68e01236d89128e36fef9f202b18 *inst/doc/example4.html
+7f1efc209d77673844bbdbe724ee5318 *inst/doc/example4.Rmd
+31d888395ee392a8c8d4d0a5741f0fc0 *inst/doc/example4.html
 5eb2870c38bf18fd6c3e9d99bcca6612 *inst/extdata/ACR.raw
 217207bfaa9a0dc2f7a9757454b663af *inst/extdata/APOBEC3A.raw
 8e1a6491613cadd0eb667f23e2fab97f *inst/extdata/APOBEC3C.raw
@@ -47,4 +47,4 @@ b4107430612c27c2eb63e242610f8fee *man/cosihap.Rd
 bab26dd889041cc285193ad2ee3f1f79 *vignettes/example1.Rmd
 7dd4a363f4d9f1c0136e5baf04ea4fa3 *vignettes/example2.Rmd
 aa3806eaa5ea4256a16e3c1a678d0850 *vignettes/example3.Rmd
-c85129871eac9d77b7abf0ae4ce14423 *vignettes/example4.Rmd
+7f1efc209d77673844bbdbe724ee5318 *vignettes/example4.Rmd

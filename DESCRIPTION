@@ -1,7 +1,8 @@
 Package: SEAGLE
 Type: Package
-Title: Scalable Exact Algorithm for Large-Scale Set-Based GxE Tests
-Version: 1.0.0
+Title: Scalable Exact Algorithm for Large-Scale Set-Based
+        Gene-Environment Interaction Tests
+Version: 1.0.1
 Authors@R: c(person("Jocelyn", "Chi", email = "jocetchi@gmail.com",
                   role = c("aut", "cre")),
             person("Ilse", "Ipsen", email = "ipsen@ncsu.edu",
@@ -35,10 +36,10 @@ RoxygenNote: 7.1.1
 Suggests: rmarkdown, knitr
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2021-06-04 12:41:12 UTC; jocelyn
+Packaged: 2021-11-05 21:19:27 UTC; jtc
 Author: Jocelyn Chi [aut, cre],
   Ilse Ipsen [aut],
   Jung-Ying Tzeng [aut]
 Maintainer: Jocelyn Chi <jocetchi@gmail.com>
 Repository: CRAN
-Date/Publication: 2021-06-07 07:10:08 UTC
+Date/Publication: 2021-11-05 21:40:02 UTC
